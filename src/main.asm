@@ -60,7 +60,6 @@ vblankwait:
 
 .segment "RODATA"
 palettes:
-palettes:
 .byte $11, $19, $09, $0f
 .byte $23, $01, $05, $35
 .byte $23, $01, $05, $35
