@@ -6,6 +6,10 @@ adrLowByte:   .res 1
 adrHiByte:    .res 1
 countLoByte:  .res 1
 countHiByte:  .res 1
+ballDirection .res 1
+gameState     .res 1
+playerPaddle: .res 1
+oppntPaddle:  .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -57,8 +61,7 @@ load_background:
   STX adrLowByte
   LDX #.hibyte(nametable1)
   STX adrHiByte
-  LDX #$04
-  STX countHiByte
+  LDX #$00
   LDY #$00
   STY countLoByte
 load_backgroundLoop:
@@ -72,7 +75,7 @@ load_backgroundLoop:
   BNE load_backgroundLoop
   INC countLoByte
   LDA countLoByte
-  CMP #$04
+  CMP #$07
   BNE load_backgroundLoop
   JMP load_attribute
 increaseHigh:
@@ -99,6 +102,9 @@ vblankwait:
   STA PPUCTRL
   LDA #%00111110
   STA PPUMASK
+
+
+
 
   JMP vblankwait
 .endproc
