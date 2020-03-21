@@ -64,30 +64,20 @@ load_background:
 load_backgroundLoop:
   LDA (adrLowByte),Y
   STA $2007
-  CLC
-  LDA adrLowByte
-  ADC #$01
-  STA adrLowByte
-  LDA adrHiByte
-  ADC #$00
-  STA adrHiByte
-
-  LDA countLoByte
-  SEC
-  SBC #$01
-  STA countLoByte
-  LDA countHiByte
-  SBC #$00
-  STA countHiByte
-
-  LDA countLoByte
-  CMP #$00
+  CMP #$FF
+  INC adrLowByte
+  BEQ increaseHigh
+  INX
+  CPX #$00
   BNE load_backgroundLoop
-  LDA countHiByte
-  CMP #$00
+  INC countLoByte
+  LDA countLoByte
+  CMP #$04
   BNE load_backgroundLoop
-
-
+  JMP load_attribute
+increaseHigh:
+  INC adrHiByte
+  JMP load_backgroundLoop
 
 load_attribute:
   LDA PPUSTATUS
