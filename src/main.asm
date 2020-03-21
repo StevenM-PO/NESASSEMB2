@@ -2,6 +2,8 @@
 .include "header.inc"
 
 .segment "ZEROPAGE"
+lowbyte: .res 1
+hibyte:  .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -50,11 +52,23 @@ load_background:
   LDA #$00
   STA $2006
   LDX #$00
+  LDY #$00
+  LDA #.lobyte(nametable1)
+  STA lowbyte
+  LDA #.hibyte(nametable1)
+  STA hibyte
 load_backgroundLoop:
-  LDA nametable1,X
+  LDA (lowbyte),Y
   STA $2007
+  INY
+  CPY #$FF
+  BNE load_backgroundLoop
+  LDA hibyte
+  CLC
+  ADC #$01
+  STA hibyte
   INX
-  CPX #$80
+  CPX #$04
   BNE load_backgroundLoop
 
 load_attribute:
@@ -68,7 +82,7 @@ load_attribute_loop:
   LDA attribute,X
   STA PPUDATA
   INX
-  CPX #$08
+  CPX #$40
   BNE load_attribute_loop
 vblankwait:
   BIT PPUSTATUS
@@ -89,7 +103,7 @@ vblankwait:
 
 .segment "RODATA"
 palettes:
-.byte $11, $19, $09, $0f
+.byte $65, $19, $09, $0f
 .byte $23, $01, $05, $35
 .byte $23, $01, $05, $35
 .byte $23, $01, $05, $35
@@ -97,3 +111,4 @@ palettes:
 attribute:
 .byte %00000000, %00010000, %0010000, %00010000, %00000000, %00000000, %00000000, %00110000
 .include "nametable1.asm"
+.include "attributes.asm"
