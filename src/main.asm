@@ -136,12 +136,20 @@ loadPlayer:
   STA $020F,Y
   INX
   CPX #$03
-  BEQ playStart
+  BEQ loadBall
   CLC
   TYA
   ADC #$04
   TAY
   JMP loadPlayer
+loadBall:
+  LDX #$00
+loadBallLoop:
+  LDA ballSprite,X
+  STA $0218,X
+  INX
+  CPX #04
+  BNE loadBallLoop
 playStart:
   LDA #$01
   STA gameState
@@ -153,8 +161,47 @@ endgame:
   JMP vblankwait
 
 ;subroutines
+LatchController:
+  LDA #$01
+  STA $4016
+  LDA #$00
+  STA $4016
+
+  JSR readNextInput
+  BEQ a_noPress
+a_noPress:
+
+  JSR readNextInput
+  BEQ b_noPress
+b_noPress:
+
+  JSR readNextInput
+  BEQ sel_noPress
+sel_noPress:
+
+  JSR readNextInput
+  BEQ strt_noPress
+strt_noPress:
+
+  JSR readNextInput
+  BEQ up_noPress
+up_noPress:
+
+  JSR readNextInput
+  BEQ dwn_noPress
+dwn_noPress:
+
+  JSR readNextInput
+  BEQ lft_noPress
+lft_noPress:
+
+  JSR readNextInput
+  BEQ rgt_noPress
+rgt_noPress:
+  RTS
+
 readNextInput:
-  LDA $4016
+  LDA PLAYER1
   AND #%00000001
   RTS
 

@@ -12,3 +12,8 @@ opnPosX:
 .byte $E0
 opnAtt:
 .byte $42, $42, $C2
+;End Paddle
+
+;Ball
+ballSprite:
+.byte $68, $01, $03, $80
