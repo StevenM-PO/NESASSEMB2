@@ -6,8 +6,8 @@ adrLowByte:   .res 1
 adrHiByte:    .res 1
 countLoByte:  .res 1
 countHiByte:  .res 1
-ballDirection .res 1
-gameState     .res 1
+ballDirection: .res 1
+gameState:     .res 1
 playerPaddle: .res 1
 oppntPaddle:  .res 1
 
