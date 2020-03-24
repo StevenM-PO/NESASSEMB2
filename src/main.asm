@@ -2,14 +2,17 @@
 .include "header.inc"
 
 .segment "ZEROPAGE"
-adrLowByte:   .res 1
-adrHiByte:    .res 1
-countLoByte:  .res 1
-countHiByte:  .res 1
-ballDirection: .res 1
-gameState:     .res 1
-playerPaddle: .res 1
-oppntPaddle:  .res 1
+adrLowByte:       .res 1
+adrHiByte:        .res 1
+countLoByte:      .res 1
+countHiByte:      .res 1
+ballDirection:    .res 1
+gameState:        .res 1
+playerPosX:       .res 1
+playerPosY:       .res 1
+oppntPosX:        .res 1
+oppntPosY:        .res 1
+controllerInput:  .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -123,6 +126,7 @@ loadPlayer:
   LDA paddlePosY,X
   STA $0200,Y
   STA $0200+12,Y
+  STA playerPosY
   LDA paddleGrph,X
   STA $0201,Y
   STA $020D,Y
@@ -150,14 +154,17 @@ loadBallLoop:
   INX
   CPX #04
   BNE loadBallLoop
-playStart:
+;playstart
   LDA #$01
   STA gameState
 play:
+  JSR LatchController
+
 
 score:
 endgame:
 
+  JSR updateSprites
   JMP vblankwait
 
 ;subroutines
@@ -185,10 +192,12 @@ strt_noPress:
 
   JSR readNextInput
   BEQ up_noPress
+  JSR PmoveUp
 up_noPress:
 
   JSR readNextInput
   BEQ dwn_noPress
+  JSR PmoveDown
 dwn_noPress:
 
   JSR readNextInput
@@ -204,7 +213,38 @@ readNextInput:
   LDA PLAYER1
   AND #%00000001
   RTS
-
+;end controller
+PmoveUp:
+  LDA playerPosY
+  SEC
+  SBC #$02
+  CMP #$10
+  BCC clampLow
+  STA playerPosY
+  RTS
+PmoveDown:
+  LDA playerPosY
+  CLC
+  ADC #$02
+  CMP #$C8
+  BCS clampHi
+  STA playerPosY
+  RTS
+updateSprites:
+  LDA playerPosY
+  STA $0200
+  CLC
+  ADC #$08
+  STA $0200+4
+  ADC #$08
+  STA $0200+8
+  RTS
+clampLow:
+  LDA #$10
+  RTS
+clampHi:
+  LDA #$C8
+  RTS
 .endproc
 
 .segment "VECTORS"
