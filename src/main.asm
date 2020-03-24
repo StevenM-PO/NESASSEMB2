@@ -102,11 +102,62 @@ vblankwait:
   STA PPUCTRL
   LDA #%00111110
   STA PPUMASK
+  LDX #$00
+  LDY #$00
 
+;gameLoop start
+gameLoop:
+  LDA gameState
+  CMP #$00
+  BEQ load
+  CMP #$01
+  BEQ play
+  CMP #$02
+  BEQ score
+  CMP #$03
+  BEQ endgame
+load:
+loadPlayer:
+;X increments 1 to count iteration
+;Y increments 4 to count iteration + offset
+  LDA paddlePosY,X
+  STA $0200,Y
+  STA $0200+12,Y
+  LDA paddleGrph,X
+  STA $0201,Y
+  STA $020D,Y
+  LDA paddleAtt,X
+  STA $0202,Y
+  LDA opnAtt,X
+  STA $020E,Y
+  LDA paddlePosX
+  STA $0203,Y
+  LDA opnPosX
+  STA $020F,Y
+  INX
+  CPX #$03
+  BEQ playStart
+  CLC
+  TYA
+  ADC #$04
+  TAY
+  JMP loadPlayer
+playStart:
+  LDA #$01
+  STA gameState
+play:
 
-
+score:
+endgame:
 
   JMP vblankwait
+
+;subroutines
+readNextInput:
+  LDA $4016
+  AND #%00000001
+  RTS
+
 .endproc
 
 .segment "VECTORS"
@@ -123,3 +174,4 @@ palettes:
 .byte $0F, $09, $19, $29
 .include "attribute.asm"
 .include "nametable1.asm"
+.include "spriteTable.asm"
