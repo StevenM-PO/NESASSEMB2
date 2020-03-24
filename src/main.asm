@@ -2,8 +2,14 @@
 .include "header.inc"
 
 .segment "ZEROPAGE"
-lowbyte: .res 1
-hibyte:  .res 1
+adrLowByte:   .res 1
+adrHiByte:    .res 1
+countLoByte:  .res 1
+countHiByte:  .res 1
+ballDirection .res 1
+gameState     .res 1
+playerPaddle: .res 1
+oppntPaddle:  .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -51,25 +57,30 @@ load_background:
   STA $2006
   LDA #$00
   STA $2006
+  LDX #.lobyte(nametable1)
+  STX adrLowByte
+  LDX #.hibyte(nametable1)
+  STX adrHiByte
   LDX #$00
   LDY #$00
-  LDA #.lobyte(nametable1)
-  STA lowbyte
-  LDA #.hibyte(nametable1)
-  STA hibyte
+  STY countLoByte
 load_backgroundLoop:
-  LDA (lowbyte),Y
+  LDA (adrLowByte),Y
   STA $2007
-  INY
-  CPY #$FF
-  BNE load_backgroundLoop
-  LDA hibyte
-  CLC
-  ADC #$01
-  STA hibyte
+  CMP #$FF
+  INC adrLowByte
+  BEQ increaseHigh
   INX
-  CPX #$04
+  CPX #$00
   BNE load_backgroundLoop
+  INC countLoByte
+  LDA countLoByte
+  CMP #$07
+  BNE load_backgroundLoop
+  JMP load_attribute
+increaseHigh:
+  INC adrHiByte
+  JMP load_backgroundLoop
 
 load_attribute:
   LDA PPUSTATUS
@@ -92,6 +103,9 @@ vblankwait:
   LDA #%00111110
   STA PPUMASK
 
+
+
+
   JMP vblankwait
 .endproc
 
@@ -103,12 +117,9 @@ vblankwait:
 
 .segment "RODATA"
 palettes:
-.byte $65, $19, $09, $0f
-.byte $23, $01, $05, $35
-.byte $23, $01, $05, $35
-.byte $23, $01, $05, $35
-
-attribute:
-.byte %00000000, %00010000, %0010000, %00010000, %00000000, %00000000, %00000000, %00110000
+.byte $0F, $00, $10, $30
+.byte $0F, $01, $21, $31
+.byte $0F, $06, $16, $26
+.byte $0F, $09, $19, $29
+.include "attribute.asm"
 .include "nametable1.asm"
-.include "attributes.asm"
