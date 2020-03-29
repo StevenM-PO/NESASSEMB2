@@ -24,6 +24,10 @@ oppnBoxMiddle:    .res 1
 oppnBoxLower:     .res 1
 ballBoxY:         .res 1
 ballBoxX:         .res 1
+;ball speeds
+ballDirX:         .res 1
+ballDirY:         .res 1
+ballspeed:        .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -116,8 +120,6 @@ vblankwait:
   STA PPUCTRL
   LDA #%00111110
   STA PPUMASK
-  LDX #$00
-  LDY #$00
 
 ;gameLoop start
 gameLoop:
@@ -131,6 +133,8 @@ gameLoop:
   CMP #$03
   BEQ endgame
 load:
+  LDX #$00
+  LDY #$00
 loadPlayer:
 ;X increments 1 to count iteration
 ;Y increments 4 to count iteration + offset
@@ -157,7 +161,11 @@ loadPlayer:
   TAY
   JMP loadPlayer
 loadBall:
+  LDX #$03
+  STX ballspeed
   LDX #$00
+  STX ballDirX
+  STX ballDirY
 loadBallLoop:
   LDA ballSprite,X
   STA $0218,X
@@ -176,16 +184,20 @@ loadBallLoop:
   LDA #$01
   STA gameState
 play:
+  JSR updateSprites
   JSR LatchController
   LDA playerPosY
   JSR calcPlayer
   JSR calBall
+  JSR moveBall
+
+
 
 
 score:
 endgame:
 
-  JSR updateSprites
+
   JMP vblankwait
 
 ;subroutines
@@ -271,6 +283,41 @@ updateSprites:
   LDA ballX
   STA $021B
   RTS
+
+;Ball subroutines
+moveBall:
+  LDA ballDirX
+  CMP #$01
+  BEQ ballLeft
+  LDA ballX
+  CLC
+  ADC ballspeed
+  STA ballX
+  LDA ballDirY
+  CMP #$01
+  BEQ ballUp
+  CMP #$02
+  BEQ ballDown
+  RTS
+ballDown:
+  LDA ballY
+  CLC
+  ADC ballspeed
+  STA ballY
+  RTS
+ballLeft:
+  LDA ballX
+  SEC
+  SBC ballspeed
+  STA ballX
+  RTS
+ballUp:
+  LDA ballY
+  SEC
+  SBC ballspeed
+  STA ballY
+  RTS
+
 ;Math stuff
 clampLow:
   LDA #$10
@@ -278,6 +325,7 @@ clampLow:
 clampHi:
   LDA #$C8
   RTS
+;bounding boxes
 calcPlayer:
   LSR A
   LSR A
