@@ -12,7 +12,18 @@ playerPosX:       .res 1
 playerPosY:       .res 1
 oppntPosX:        .res 1
 oppntPosY:        .res 1
+ballX:            .res 1
+ballY:            .res 1
 controllerInput:  .res 1
+;collision boxes
+playerBoxUpper:   .res 1
+playerBoxMiddle:  .res 1
+playerBoxLower:   .res 1
+oppnBoxUpper:     .res 1
+oppnBoxMiddle:    .res 1
+oppnBoxLower:     .res 1
+ballBoxY:         .res 1
+ballBoxX:         .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -126,7 +137,6 @@ loadPlayer:
   LDA paddlePosY,X
   STA $0200,Y
   STA $0200+12,Y
-  STA playerPosY
   LDA paddleGrph,X
   STA $0201,Y
   STA $020D,Y
@@ -155,10 +165,21 @@ loadBallLoop:
   CPX #04
   BNE loadBallLoop
 ;playstart
+
+  LDA paddlePosY
+  STA playerPosY
+  STA oppntPosY
+  LDA ballSprite
+  STA ballY
+  LDA ballSprite+3
+  STA ballX
   LDA #$01
   STA gameState
 play:
   JSR LatchController
+  LDA playerPosY
+  JSR calcPlayer
+  JSR calBall
 
 
 score:
@@ -238,13 +259,53 @@ updateSprites:
   STA $0200+4
   ADC #$08
   STA $0200+8
+  LDA oppntPosY
+  STA $020C
+  CLC
+  ADC #$08
+  STA $020C+4
+  ADC #$08
+  STA $020C+8
+  LDA ballY
+  STA $0218
+  LDA ballX
+  STA $021B
   RTS
+;Math stuff
 clampLow:
   LDA #$10
   RTS
 clampHi:
   LDA #$C8
   RTS
+calcPlayer:
+  LSR A
+  LSR A
+  LSR A
+  STA playerBoxUpper
+  CLC
+  ADC #$01
+  STA playerBoxMiddle
+  ADC #$01
+  STA playerBoxLower
+  RTS
+calBall:
+  LDA ballY
+  CLC
+  ADC #$04
+  LSR A
+  LSR A
+  LSR A
+  STA ballBoxY
+  LDA ballX
+  LSR A
+  LSR A
+  LSR A
+  STA ballBoxX
+  RTS
+
+;end math stuff
+
 .endproc
 
 .segment "VECTORS"
