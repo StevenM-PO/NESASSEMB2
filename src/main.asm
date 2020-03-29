@@ -19,9 +19,9 @@ controllerInput:  .res 1
 playerBoxUpper:   .res 1
 playerBoxMiddle:  .res 1
 playerBoxLower:   .res 1
-oppnBoxUpper:     .res 1
-oppnBoxMiddle:    .res 1
-oppnBoxLower:     .res 1
+oppntBoxUpper:     .res 1
+oppntBoxMiddle:    .res 1
+oppntBoxLower:     .res 1
 ballBoxY:         .res 1
 ballBoxX:         .res 1
 ;ball speeds
@@ -161,7 +161,7 @@ loadPlayer:
   TAY
   JMP loadPlayer
 loadBall:
-  LDX #$03
+  LDX #$01
   STX ballspeed
   LDX #$00
   STX ballDirX
@@ -188,6 +188,7 @@ play:
   JSR LatchController
   LDA playerPosY
   JSR calcPlayer
+  JSR calcOppn
   JSR calBall
   JSR moveBall
 
@@ -337,10 +338,22 @@ calcPlayer:
   ADC #$01
   STA playerBoxLower
   RTS
+calcOppn:
+  LDA oppntPosY
+  LSR A
+  LSR A
+  LSR A
+  STA oppntBoxUpper
+  TAX
+  INX
+  STX oppntBoxMiddle
+  INX
+  STX oppntBoxLower
+  RTS
+
 calBall:
+;normalize ball x and y
   LDA ballY
-  CLC
-  ADC #$04
   LSR A
   LSR A
   LSR A
@@ -350,6 +363,84 @@ calBall:
   LSR A
   LSR A
   STA ballBoxX
+;end normalize x and y
+;begin collision checking
+;first ceiling and floor
+;then paddles
+  LDA ballBoxY
+  CMP #$01
+  BEQ bounceTop
+  CMP #$1B
+  BEQ bounceBottom
+  LDA ballBoxX
+  CMP #$03
+  BEQ ballContinue
+  CMP #$1B
+  BEQ ballOContinue
+  RTS
+ballContinue:
+  LDA ballBoxY
+  CMP playerBoxUpper
+  BEQ bouncePlayerHigh
+  CMP playerBoxMiddle
+  BEQ bouncePlayerMiddle
+  CMP playerBoxLower
+  BEQ bouncePlayerLow
+  RTS
+ballOContinue:
+  LDA ballBoxY
+  CMP oppntBoxUpper
+  BEQ bounceOppnHigh
+  CMP oppntBoxMiddle
+  BEQ bounceOppnMiddle
+  CMP oppntBoxLower
+  BEQ bounceOppnLow
+  RTS
+
+bouncePlayerHigh:
+  LDA #$01
+  STA ballDirY
+  LDA #$00
+  STA ballDirX
+  RTS
+bouncePlayerMiddle:
+  LDA #$00
+  STA ballDirY
+  STA ballDirX
+  RTS
+bouncePlayerLow:
+  LDA #$02
+  STA ballDirY
+  LDA #$00
+  STA ballDirX
+  RTS
+
+bounceOppnHigh:
+  LDA #$01
+  STA ballDirY
+  LDA #$01
+  STA ballDirX
+  RTS
+bounceOppnMiddle:
+  LDA #$00
+  STA ballDirY
+  LDA #$01
+  STA ballDirX
+  RTS
+bounceOppnLow:
+  LDA #$02
+  STA ballDirY
+  LDA #$01
+  STA ballDirX
+  RTS
+
+bounceTop:
+  LDA #02
+  STA ballDirY
+  RTS
+bounceBottom:
+  LDA #$01
+  STA ballDirY
   RTS
 
 ;end math stuff
