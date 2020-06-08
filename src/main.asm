@@ -350,11 +350,19 @@ calcOppn:
   LSR A
   LSR A
   STA oppntBoxUpper
+<<<<<<< HEAD
   CLC
   ADC #$01
   STA oppntBoxMiddle
   ADC #$01
   STA oppntBoxLower
+=======
+  TAX
+  INX
+  STX oppntBoxMiddle
+  INX
+  STX oppntBoxLower
+>>>>>>> d8725d562c21f923c4f1bc37ef84e34a73aefed8
   RTS
 
 calBall:
@@ -381,6 +389,7 @@ calBall:
   LDA ballBoxX
   CMP #$03
   BEQ ballContinue
+<<<<<<< HEAD
   LDA ballBoxX
   CMP #$1B
   BEQ ballOContinue
@@ -388,6 +397,11 @@ calBall:
 ;  BGE scoreSub
   RTS
 loadBall2:
+=======
+  CMP #$1B
+  BEQ ballOContinue
+  RTS
+>>>>>>> d8725d562c21f923c4f1bc37ef84e34a73aefed8
 ballContinue:
   LDA ballBoxY
   CMP playerBoxUpper
