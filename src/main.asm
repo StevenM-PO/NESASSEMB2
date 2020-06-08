@@ -19,15 +19,18 @@ controllerInput:  .res 1
 playerBoxUpper:   .res 1
 playerBoxMiddle:  .res 1
 playerBoxLower:   .res 1
-oppnBoxUpper:     .res 1
-oppnBoxMiddle:    .res 1
-oppnBoxLower:     .res 1
+oppntBoxUpper:     .res 1
+oppntBoxMiddle:    .res 1
+oppntBoxLower:     .res 1
 ballBoxY:         .res 1
 ballBoxX:         .res 1
 ;ball speeds
 ballDirX:         .res 1
 ballDirY:         .res 1
 ballspeed:        .res 1
+;scoring
+playerPoints:     .res 1
+opnPoints:        .res 1
 
 .segment "CODE"
 .proc irq_handler
@@ -128,10 +131,8 @@ gameLoop:
   BEQ load
   CMP #$01
   BEQ play
-  CMP #$02
-  BEQ score
-  CMP #$03
-  BEQ endgame
+;  CMP #$02
+;  BEQ score
 load:
   LDX #$00
   LDY #$00
@@ -161,7 +162,7 @@ loadPlayer:
   TAY
   JMP loadPlayer
 loadBall:
-  LDX #$03
+  LDX #$01
   STX ballspeed
   LDX #$00
   STX ballDirX
@@ -188,17 +189,21 @@ play:
   JSR LatchController
   LDA playerPosY
   JSR calcPlayer
+  JSR calcOppn
   JSR calBall
   JSR moveBall
+  JMP vblankwait
+scoreSub:
+  LDX playerPoints
+  INX
+  STX playerPoints
+  JMP loadBall
 
-
-
-
-score:
+opnScore:
 endgame:
 
 
-  JMP vblankwait
+
 
 ;subroutines
 LatchController:
@@ -293,6 +298,7 @@ moveBall:
   CLC
   ADC ballspeed
   STA ballX
+ballMovCont:
   LDA ballDirY
   CMP #$01
   BEQ ballUp
@@ -310,14 +316,15 @@ ballLeft:
   SEC
   SBC ballspeed
   STA ballX
-  RTS
+  JMP ballMovCont
 ballUp:
   LDA ballY
   SEC
   SBC ballspeed
   STA ballY
   RTS
-
+JumpToScore:
+  JMP scoreSub
 ;Math stuff
 clampLow:
   LDA #$10
@@ -337,10 +344,22 @@ calcPlayer:
   ADC #$01
   STA playerBoxLower
   RTS
-calBall:
-  LDA ballY
+calcOppn:
+  LDA oppntPosY
+  LSR A
+  LSR A
+  LSR A
+  STA oppntBoxUpper
   CLC
-  ADC #$04
+  ADC #$01
+  STA oppntBoxMiddle
+  ADC #$01
+  STA oppntBoxLower
+  RTS
+
+calBall:
+;normalize ball x and y
+  LDA ballY
   LSR A
   LSR A
   LSR A
@@ -350,6 +369,88 @@ calBall:
   LSR A
   LSR A
   STA ballBoxX
+;end normalize x and y
+;begin collision checking
+;first ceiling and floor
+;then paddles
+  LDA ballBoxY
+  CMP #$01
+  BEQ bounceTop
+  CMP #$1B
+  BEQ bounceBottom
+  LDA ballBoxX
+  CMP #$03
+  BEQ ballContinue
+  LDA ballBoxX
+  CMP #$1B
+  BEQ ballOContinue
+  BCS JumpToScore
+;  BGE scoreSub
+  RTS
+loadBall2:
+ballContinue:
+  LDA ballBoxY
+  CMP playerBoxUpper
+  BEQ bouncePlayerHigh
+  CMP playerBoxMiddle
+  BEQ bouncePlayerMiddle
+  CMP playerBoxLower
+  BEQ bouncePlayerLow
+  RTS
+ballOContinue:
+  LDA ballBoxY
+  CMP oppntBoxUpper
+  BEQ bounceOppnHigh
+  CMP oppntBoxMiddle
+  BEQ bounceOppnMiddle
+  CMP oppntBoxLower
+  BEQ bounceOppnLow
+  RTS
+
+bouncePlayerHigh:
+  LDA #$01
+  STA ballDirY
+  LDA #$00
+  STA ballDirX
+  RTS
+bouncePlayerMiddle:
+  LDA #$00
+  STA ballDirY
+  STA ballDirX
+  RTS
+bouncePlayerLow:
+  LDA #$02
+  STA ballDirY
+  LDA #$00
+  STA ballDirX
+  RTS
+
+bounceOppnHigh:
+  LDA #$01
+  STA ballDirY
+  LDA #$01
+  STA ballDirX
+  RTS
+bounceOppnMiddle:
+  LDA #$00
+  STA ballDirY
+  LDA #$01
+  STA ballDirX
+  RTS
+bounceOppnLow:
+  LDA #$02
+  STA ballDirY
+  LDA #$01
+  STA ballDirX
+  RTS
+
+bounceTop:
+  LDA #02
+  STA ballDirY
+  RTS
+bounceBottom:
+  LDA #$01
+  STA ballDirY
   RTS
 
 ;end math stuff
